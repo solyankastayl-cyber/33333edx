@@ -1,7 +1,7 @@
-# TA Engine PRD - PHASE 13.5 Alpha Graph
+# TA Engine PRD - PHASE 13.6 Alpha DAG
 
 ## Original Problem Statement
-TA Engine - Institutional-grade quant trading platform. Building autonomous Alpha Factory for systematic signal generation. PHASE 13.5 implements Alpha Graph - a reasoning engine that analyzes relationships between approved factors.
+TA Engine - Institutional-grade quant trading platform. Building autonomous Alpha Factory for systematic signal generation. PHASE 13.6 implements Alpha DAG - a computational graph for efficient factor calculation with caching and parallel execution.
 
 ## Architecture Overview
 ```
@@ -13,14 +13,18 @@ backend/
 │   ├── feature_library/         # PHASE 13.2 - 308+ features
 │   ├── factor_generator/        # PHASE 13.3 - 1236+ factors
 │   ├── factor_ranker/           # PHASE 13.4 - 105 approved
-│   └── alpha_graph/             # PHASE 13.5 ✅
-│       ├── alpha_graph_types.py    # GraphNode, GraphEdge, RelationType
-│       ├── alpha_graph_builder.py  # Build graph from factors
-│       ├── alpha_graph_reasoner.py # Coherence scoring engine
-│       ├── alpha_graph_repository.py # MongoDB persistence
-│       ├── alpha_graph_routes.py   # API endpoints
-│       └── alpha_graph.py          # Main orchestrator
-└── server.py                    # FastAPI v13.5.0
+│   ├── alpha_graph/             # PHASE 13.5 - reasoning graph
+│   └── alpha_dag/               # PHASE 13.6 ✅
+│       ├── dag_types.py         # DagNode, DagEdge, NodeType
+│       ├── dag_builder.py       # Build DAG from factors
+│       ├── dag_optimizer.py     # Remove duplicates, fusion
+│       ├── dag_scheduler.py     # Levelized topological sort
+│       ├── dag_executor.py      # Execute DAG
+│       ├── dag_cache.py         # Input-hash caching
+│       ├── dag_repository.py    # MongoDB persistence
+│       ├── dag_routes.py        # API endpoints
+│       └── alpha_dag.py         # Main orchestrator
+└── server.py                    # FastAPI v13.6.0
 ```
 
 ## What's Been Implemented
@@ -37,93 +41,80 @@ backend/
 ### PHASE 13.4 — Factor Ranker ✅
 - 105 approved factors (4 STRONG + 101 PROMISING)
 
-### PHASE 13.5 — Alpha Graph (2026-03-11) ✅
-**Core Features:**
-- **107 graph nodes** from approved factors
-- **4843 edges** (relationships between factors)
-- **5 relation types**: supports, amplifies, contradicts, conditional_on, invalidates
-- **Coherence scoring engine** for signal quality evaluation
-- **Support/conflict chain detection**
+### PHASE 13.5 — Alpha Graph ✅
+- 107 graph nodes, 4843 edges
+- 5 relation types: supports, amplifies, contradicts, conditional_on, invalidates
+- Coherence scoring engine
 
-**Relation Types Distribution:**
+### PHASE 13.6 — Alpha DAG (2026-03-11) ✅
+**Core Features:**
+- **293 DAG nodes** (97 features, 89 transforms, 107 factors)
+- **495 edges** (dependencies)
+- **Depth: 3 levels** for parallel execution
+- **Input-hash caching** with 100% hit rate on repeated calls
+- **Execution time: ~2ms** (target was <15ms)
+
+**Node Types:**
 | Type | Count | Description |
 |------|-------|-------------|
-| supports | 3165 | A supports B |
-| amplifies | 21 | A amplifies B |
-| contradicts | 212 | A contradicts B |
-| conditional_on | 1445 | A works only if B |
-| invalidates | 0 | A invalidates B |
+| feature | 97 | Base market features (price_return, volume, etc.) |
+| transform | 89 | Transformations (zscore, ema, rolling_mean, etc.) |
+| factor | 107 | Final computed factors |
 
-**Nodes by Family:**
-| Family | Count |
-|--------|-------|
-| momentum | 49 |
-| breakout | 28 |
-| regime | 17 |
-| correlation | 4 |
-| structure | 4 |
-| microstructure | 3 |
-| volume | 1 |
-| macro | 1 |
+**Transform Types (16):**
+- zscore, ema, sma, rolling_mean, rolling_std
+- rolling_zscore (fused), lag, diff, percentile, rank
+- log, abs, sign, clip, normalize, threshold
 
-**Family Relationship Matrix:**
-```
-FAMILY_SUPPORTS:
-  momentum → trend, breakout
-  trend → momentum, structure
-  breakout → momentum, volatility
-  volatility → breakout, regime
-  volume → breakout, momentum, liquidity
-  liquidity → reversal, microstructure
-  microstructure → liquidity, volume
-  structure → trend, reversal
-  correlation → macro, regime
-  macro → correlation, regime
-  regime → macro, volatility
-  reversal → liquidity, structure
+**DAG Optimization:**
+- Duplicate node removal
+- Transform merging
+- Transform fusion (e.g., zscore(rolling_mean) → rolling_zscore)
+- Depth minimization
 
-FAMILY_CONTRADICTS:
-  trend ← → reversal
-  reversal ← → momentum
-  breakout ← → regime
-```
+**Levelized Scheduling:**
+| Level | Nodes | Can Parallelize |
+|-------|-------|-----------------|
+| 0 | 97 | Yes (features) |
+| 1 | 106 | Yes (transforms) |
+| 2 | 90 | Yes (factors) |
+| **Max Parallelism** | **106** | |
 
-**Coherence Score Formula:**
-```
-base_score = 0.5
-+ supports * 0.015
-+ amplifies * 0.02
-+ conditionals * 0.01
-- conflicts * 0.03
-- invalidations * 0.04
-+ support_chains * 0.05
-+ amplify_chains * 0.07
-```
+**Cache Layer:**
+- Input-hash based validation
+- TTL support (60s default)
+- Hit rate tracking
+- Top hits monitoring
 
-**Signal Quality Thresholds:**
-| Quality | Coherence | Conditions |
-|---------|-----------|------------|
-| INVALIDATED | Any | invalidations > 0 |
-| CONFLICTED | < 0.35 | conflicts > 2 |
-| STRONG | ≥ 0.75 | - |
-| MODERATE | ≥ 0.55 | - |
-| WEAK | ≥ 0.35 | - |
+**Execution Modes:**
+1. **Snapshot Mode** - for backtesting and analysis
+2. **Streaming Mode** - for live trading (tick-by-tick)
+
+**Performance:**
+| Metric | Value | Target |
+|--------|-------|--------|
+| Avg execution | 2.17ms | <15ms ✅ |
+| Min execution | 1.81ms | - |
+| Max execution | 2.65ms | - |
+| Cache hit rate | 100% | - |
 
 **API Endpoints:**
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/alpha-graph/health` | GET | Health check |
-| `/api/alpha-graph/stats` | GET | Graph statistics |
-| `/api/alpha-graph/build` | POST | Build graph from factors |
-| `/api/alpha-graph/nodes` | GET | List nodes with filters |
-| `/api/alpha-graph/edges` | GET | List edges with filters |
-| `/api/alpha-graph/relation-types` | GET | Available relation types |
-| `/api/alpha-graph/reason` | POST | Evaluate signal coherence |
-| `/api/alpha-graph/context/{id}` | GET | Node context |
-| `/api/alpha-graph/conflicts` | GET | All conflicts |
-| `/api/alpha-graph/network/{id}` | GET | Support network |
-| `/api/alpha-graph/snapshots` | GET | Graph snapshots |
-| `/api/alpha-graph/clear` | DELETE | Clear graph |
+| `/api/alpha-dag/health` | GET | Health check |
+| `/api/alpha-dag/stats` | GET | DAG statistics |
+| `/api/alpha-dag/build` | POST | Build DAG |
+| `/api/alpha-dag/nodes` | GET | List nodes |
+| `/api/alpha-dag/edges` | GET | List edges |
+| `/api/alpha-dag/execute` | POST | Execute on snapshot |
+| `/api/alpha-dag/execute-stream` | POST | Streaming execution |
+| `/api/alpha-dag/execution-order` | GET | Scheduled order |
+| `/api/alpha-dag/levels` | GET | Parallel levels |
+| `/api/alpha-dag/cache/stats` | GET | Cache statistics |
+| `/api/alpha-dag/cache/clear` | POST | Clear cache |
+| `/api/alpha-dag/node-types` | GET | Available types |
+| `/api/alpha-dag/snapshots` | GET | Build snapshots |
+| `/api/alpha-dag/clear` | DELETE | Clear DAG |
 
 ## Test Results
 - PHASE 13.1: 21/21 passed (100%)
@@ -131,8 +122,9 @@ base_score = 0.5
 - PHASE 13.3: 48/48 passed (100%)
 - PHASE 13.4: 14/14 passed (100%)
 - PHASE 13.5: 21/21 passed (100%)
+- PHASE 13.6: 24/24 passed (100%)
 
-## Alpha Factory Pipeline (Complete to Graph)
+## Alpha Factory Pipeline (Complete to DAG)
 ```
 Feature Library (315 features)
       ↓
@@ -140,11 +132,11 @@ Factor Generator (1236 candidates)
       ↓
 Factor Ranker (105 approved)
       ↓
-Alpha Graph (107 nodes, 4843 edges) ← CURRENT
+Alpha Graph (107 nodes, 4843 edges)
       ↓
-Alpha DAG (NEXT)
+Alpha DAG (293 nodes, 495 edges)  ← CURRENT
       ↓
-Alpha Deployment
+Alpha Deployment (NEXT)
 ```
 
 ## Roadmap
@@ -155,9 +147,9 @@ Alpha Deployment
 - [x] PHASE 13.3 — Factor Generator ✅ (1236 factors)
 - [x] PHASE 13.4 — Factor Ranker ✅ (105 approved)
 - [x] PHASE 13.5 — Alpha Graph ✅ (107 nodes, 4843 edges)
+- [x] PHASE 13.6 — Alpha DAG ✅ (293 nodes, 495 edges)
 
 ### Next Phases
-- [ ] PHASE 13.6 — Alpha DAG (computational dependencies)
 - [ ] PHASE 13.7 — Alpha Deployment
 
 ### Future
@@ -166,56 +158,50 @@ Alpha Deployment
 
 ## Database Schema
 
-### alpha_graph_nodes
+### alpha_dag_nodes
 ```json
 {
-  "node_id": "50f21c54f791",
-  "factor_id": "50f21c54f791",
-  "family": "momentum",
-  "template": "pair_feature",
-  "inputs": ["rsi_14", "macd_signal"],
-  "composite_score": 0.62,
-  "verdict": "PROMISING",
-  "ic": 0.025,
-  "sharpe": 0.45,
-  "weight": 1.0,
-  "active": true,
-  "outgoing_edges": 30,
-  "incoming_edges": 29,
-  "created_at": "2026-03-11T22:23:02Z"
+  "node_id": "852bab1c7429",
+  "node_type": "feature",
+  "operation": "price_return_1m",
+  "params": {},
+  "inputs": [],
+  "outputs": ["798aa8f8496a", "a60b2e113012"],
+  "cost": 1.0,
+  "latency_estimate": 0.1,
+  "level": 0,
+  "execution_order": 0,
+  "cacheable": true,
+  "source_feature_id": "price_return_1m",
+  "created_at": "2026-03-11T22:42:40Z"
 }
 ```
 
-### alpha_graph_edges
+### alpha_dag_edges
 ```json
 {
-  "edge_id": "ee6eb444d5",
-  "source_node": "50f21c54f791",
-  "target_node": "cd394e6e27bd",
-  "relation_type": "supports",
-  "strength": 0.6,
-  "confidence": 0.7,
-  "reason": "momentum supports breakout",
-  "auto_generated": true,
-  "created_at": "2026-03-11T22:23:02Z"
+  "edge_id": "abc123def456",
+  "source_node": "852bab1c7429",
+  "target_node": "798aa8f8496a",
+  "created_at": "2026-03-11T22:42:40Z"
 }
 ```
 
-### alpha_graph_snapshots
+### alpha_dag_snapshots
 ```json
 {
-  "snapshot_id": "d84db3ba",
-  "total_nodes": 107,
-  "total_edges": 4843,
-  "edges_by_type": {
-    "supports": 3165,
-    "amplifies": 21,
-    "contradicts": 212,
-    "conditional_on": 1445,
-    "invalidates": 0
+  "snapshot_id": "6494a8de",
+  "total_nodes": 293,
+  "total_edges": 495,
+  "depth": 3,
+  "nodes_by_type": {
+    "feature": 97,
+    "transform": 89,
+    "factor": 107
   },
-  "nodes_by_family": {...},
-  "created_at": "2026-03-11T22:23:03Z"
+  "total_cost": 551.5,
+  "estimated_latency_ms": 2.1,
+  "created_at": "2026-03-11T22:42:40Z"
 }
 ```
 
