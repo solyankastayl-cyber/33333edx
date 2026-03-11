@@ -35,6 +35,19 @@ class FactorCombinator:
         """Reset generated IDs."""
         self.generated_ids = set()
     
+    def _flatten_tags(self, *features) -> List[str]:
+        """Flatten and deduplicate tags from features."""
+        all_tags = []
+        for f in features:
+            tags = f.get("tags", [])
+            if isinstance(tags, list):
+                for t in tags:
+                    if isinstance(t, str):
+                        all_tags.append(t)
+            elif isinstance(tags, str):
+                all_tags.append(tags)
+        return list(set(all_tags))
+    
     def _generate_id(self, inputs: List[str], template: str) -> str:
         """Generate unique factor ID."""
         key = f"{template}:{'_'.join(sorted(inputs))}"
