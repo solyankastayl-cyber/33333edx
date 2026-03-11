@@ -77,20 +77,20 @@ class FactorMetrics:
     Computes IC, Sharpe, Stability, Decay, and Regime Consistency.
     """
     
-    # Thresholds - adjusted for synthetic data
-    IC_ELITE = 0.045
-    IC_STRONG = 0.035
-    IC_PROMISING = 0.025
-    IC_WEAK = 0.015
+    # Thresholds - calibrated for realistic approval rates
+    IC_ELITE = 0.040
+    IC_STRONG = 0.030
+    IC_PROMISING = 0.020
+    IC_WEAK = 0.010
     
-    SHARPE_ELITE = 1.2
-    SHARPE_STRONG = 0.8
-    SHARPE_PROMISING = 0.5
-    SHARPE_WEAK = 0.3
+    SHARPE_ELITE = 1.0
+    SHARPE_STRONG = 0.6
+    SHARPE_PROMISING = 0.35
+    SHARPE_WEAK = 0.2
     
-    STABILITY_ELITE = 0.70
-    STABILITY_STRONG = 0.55
-    STABILITY_PROMISING = 0.40
+    STABILITY_ELITE = 0.65
+    STABILITY_STRONG = 0.50
+    STABILITY_PROMISING = 0.35
     
     # Regimes
     REGIMES = ["TRENDING_UP", "TRENDING_DOWN", "RANGE", "HIGH_VOL", "LOW_VOL"]
