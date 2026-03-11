@@ -836,7 +836,8 @@ class AlphaFeatureLibraryTester:
         
         if success:
             # Check if we have node registry stats
-            total_nodes = data.get('total_nodes', 0)
+            registry_stats = data.get('registry', {})
+            total_nodes = registry_stats.get('total_nodes', 0)
             self.log_test("Alpha Factory Stats", total_nodes > 0, f"Found {total_nodes} nodes in registry")
             return total_nodes > 0
         else:
