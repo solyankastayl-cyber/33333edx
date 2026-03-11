@@ -1,24 +1,35 @@
 #!/usr/bin/env python3
 """
-PHASE 13.2 Alpha Feature Library - Backend API Tests
-====================================================
-Comprehensive testing for Alpha Feature Library endpoints.
+PHASE 13.3 Factor Generator - Backend API Tests
+===============================================
+Comprehensive testing for Factor Generator endpoints.
 
 Test Coverage:
-- Health check
-- Stats (total_features >= 300)
-- Categories (8 categories)
-- Transforms (16 transforms)
-- Feature listing with pagination
-- Individual feature retrieval
-- Features by category
-- Feature search
-- Tags listing
-- Feature creation (POST)
-- Transform application (POST)
-- Feature update (PUT)
-- Feature dependencies
-- Alpha factory stats (PHASE 13.1 compatibility)
+- PHASE 13.3 Factor Generator (NEW):
+  * Health check
+  * Stats (total_factors >= 1000)
+  * Families (12 families)
+  * Templates (8 templates)
+  * Factor generation (POST /run)
+  * Factor listing with filters
+  * Factor search
+  * Individual factor retrieval
+  * Generation runs history
+- PHASE 13.2 Alpha Feature Library:
+  * Health check
+  * Stats (total_features >= 300)
+  * Categories (8 categories)
+  * Transforms (16 transforms)
+  * Feature listing with pagination
+  * Individual feature retrieval
+  * Features by category
+  * Feature search
+  * Tags listing
+  * Feature creation (POST)
+  * Transform application (POST)
+  * Feature update (PUT)
+  * Feature dependencies
+- PHASE 13.1 Alpha Factory compatibility
 """
 
 import requests
