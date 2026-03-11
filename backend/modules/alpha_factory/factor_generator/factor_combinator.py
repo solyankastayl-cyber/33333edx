@@ -280,7 +280,7 @@ class FactorCombinator:
             expected_direction=infer_direction(inputs, categories),
             complexity=1,
             description=f"Regime factor: {inputs[0]} in {regime}",
-            tags=feature.get("tags", []) + ["regime", regime.lower()],
+            tags=self._flatten_tags(feature) + ["regime", regime.lower()],
             created_at=datetime.now(timezone.utc),
             status=FactorStatus.CANDIDATE
         )
