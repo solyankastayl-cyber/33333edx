@@ -51,7 +51,498 @@ import sys
 from datetime import datetime
 from typing import Dict, List, Any
 
-class FactorGeneratorTester:
+class FactorRankerTester:
+    """PHASE 13.4 Factor Ranker API Tests"""
+    
+    def __init__(self, base_url: str = "https://pattern-detector-10.preview.emergentagent.com"):
+        self.base_url = base_url.rstrip('/')
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.failed_tests = []
+        self.session = requests.Session()
+        self.session.headers.update({
+            'Content-Type': 'application/json',
+            'User-Agent': 'FactorRanker-Tester/1.0'
+        })
+
+    def log_test(self, name: str, success: bool, details: str = ""):
+        """Log test result."""
+        self.tests_run += 1
+        status = "✅ PASS" if success else "❌ FAIL"
+        print(f"{status} | {name}")
+        if details:
+            print(f"     {details}")
+        
+        if success:
+            self.tests_passed += 1
+        else:
+            self.failed_tests.append({"test": name, "details": details})
+
+    def make_request(self, method: str, endpoint: str, data: Dict = None, expected_status: int = 200) -> tuple:
+        """Make HTTP request and return (success, response_data, status_code)."""
+        url = f"{self.base_url}/api/{endpoint.lstrip('/')}"
+        
+        try:
+            if method.upper() == 'GET':
+                response = self.session.get(url, timeout=30)
+            elif method.upper() == 'POST':
+                response = self.session.post(url, json=data, timeout=30)
+            elif method.upper() == 'PUT':
+                response = self.session.put(url, json=data, timeout=30)
+            else:
+                return False, {}, 0
+            
+            success = response.status_code == expected_status
+            
+            try:
+                response_data = response.json()
+            except:
+                response_data = {"raw_response": response.text}
+            
+            return success, response_data, response.status_code
+            
+        except Exception as e:
+            return False, {"error": str(e)}, 0
+
+    def test_factor_ranker_health(self):
+        """Test GET /api/factor-ranker/health - status=healthy"""
+        print("\n🔍 Testing Factor Ranker Health Check...")
+        
+        success, data, status = self.make_request('GET', 'factor-ranker/health')
+        
+        if success and data.get('status') == 'healthy':
+            self.log_test("Factor Ranker Health Check", True, f"Status: {data.get('status')}")
+            return True
+        else:
+            self.log_test("Factor Ranker Health Check", False, f"Status: {status}, Data: {data}")
+            return False
+
+    def test_factor_ranker_stats(self):
+        """Test GET /api/factor-ranker/stats - total_rankings >= 1000, approved_count >= 50"""
+        print("\n🔍 Testing Factor Ranker Stats...")
+        
+        success, data, status = self.make_request('GET', 'factor-ranker/stats')
+        
+        if success:
+            ranker_stats = data.get('ranker', {})
+            repository_stats = ranker_stats.get('repository', {})
+            
+            total_rankings = repository_stats.get('total_rankings', 0)
+            approved_count = repository_stats.get('approved_count', 0)
+            
+            # Check total rankings >= 1000
+            if total_rankings >= 1000:
+                self.log_test("Stats - Total Rankings >= 1000", True, f"Found {total_rankings} rankings")
+            else:
+                self.log_test("Stats - Total Rankings >= 1000", False, f"Only {total_rankings} rankings found")
+            
+            # Check approved count >= 50
+            if approved_count >= 50:
+                self.log_test("Stats - Approved Count >= 50", True, f"Found {approved_count} approved factors")
+            else:
+                self.log_test("Stats - Approved Count >= 50", False, f"Only {approved_count} approved factors found")
+            
+            # Check verdict breakdown
+            verdict_counts = repository_stats.get('verdict_counts', {})
+            self.log_test("Stats - Verdict Breakdown", len(verdict_counts) > 0, f"Verdicts: {verdict_counts}")
+            
+            # Check last run info
+            last_run = ranker_stats.get('last_run')
+            if last_run:
+                run_status = last_run.get('status', 'unknown')
+                self.log_test("Stats - Last Run Info", run_status == 'completed', f"Last run status: {run_status}")
+            
+            return total_rankings >= 1000 and approved_count >= 50
+        else:
+            self.log_test("Factor Ranker Stats", False, f"Status: {status}, Data: {data}")
+            return False
+
+    def test_ranking_execution(self):
+        """Test POST /api/factor-ranker/run - запуск ranking работает"""
+        print("\n🔍 Testing Ranking Execution...")
+        
+        # Test with smaller batch for testing
+        ranking_config = {
+            "max_approved": 150,
+            "clear_existing": False,
+            "seed": 42
+        }
+        
+        success, data, status = self.make_request('POST', 'factor-ranker/run', ranking_config)
+        
+        if success:
+            run_status = data.get('status', '')
+            run_data = data.get('run', {})
+            
+            if run_status == 'completed':
+                total_evaluated = run_data.get('total_evaluated', 0)
+                approved_count = run_data.get('approved_count', 0)
+                verdicts = run_data.get('verdicts', {})
+                
+                self.log_test("Ranking Execution", True, f"Evaluated {total_evaluated} factors, approved {approved_count}")
+                self.log_test("Ranking Verdicts", len(verdicts) > 0, f"Verdicts: {verdicts}")
+                
+                # Check family distribution
+                family_approved = run_data.get('family_approved', {})
+                self.log_test("Family Distribution", len(family_approved) > 0, f"Family approved: {family_approved}")
+                
+                return True
+            else:
+                error_msg = run_data.get('error_message', 'Unknown error')
+                self.log_test("Ranking Execution", False, f"Ranking failed: {error_msg}")
+        else:
+            self.log_test("Ranking Execution", False, f"Status: {status}, Data: {data}")
+        
+        return False
+
+    def test_rankings_listing(self):
+        """Test GET /api/factor-ranker/rankings - список rankings с фильтрами"""
+        print("\n🔍 Testing Rankings Listing...")
+        
+        # Test basic listing
+        success, data, status = self.make_request('GET', 'factor-ranker/rankings?limit=50')
+        
+        if success:
+            rankings = data.get('rankings', [])
+            count = data.get('count', 0)
+            
+            self.log_test("Rankings Listing", count > 0, f"Retrieved {count} rankings")
+            
+            # Check ranking structure
+            if rankings:
+                ranking = rankings[0]
+                required_fields = ['factor_id', 'verdict', 'composite_score', 'ic', 'sharpe']
+                present_fields = [field for field in required_fields if field in ranking]
+                self.log_test("Ranking Structure", len(present_fields) >= 4, f"Present fields: {present_fields}")
+            
+            return count > 0
+        else:
+            self.log_test("Rankings Listing", False, f"Status: {status}, Data: {data}")
+            return False
+
+    def test_verdict_filtering(self):
+        """Test GET /api/factor-ranker/rankings?verdict=PROMISING - фильтр по verdict"""
+        print("\n🔍 Testing Verdict Filtering...")
+        
+        # Test PROMISING filter
+        success, data, status = self.make_request('GET', 'factor-ranker/rankings?verdict=PROMISING&limit=30')
+        
+        if success:
+            rankings = data.get('rankings', [])
+            count = data.get('count', 0)
+            filters = data.get('filters', {})
+            
+            self.log_test("Verdict Filter (PROMISING)", count >= 0, f"Found {count} PROMISING factors")
+            
+            # Verify all returned rankings have PROMISING verdict
+            if rankings:
+                promising_count = sum(1 for r in rankings if r.get('verdict') == 'PROMISING')
+                self.log_test("PROMISING Verdict Consistency", promising_count == len(rankings), 
+                            f"{promising_count}/{len(rankings)} have PROMISING verdict")
+            
+            # Test STRONG filter
+            success2, data2, status2 = self.make_request('GET', 'factor-ranker/rankings?verdict=STRONG&limit=20')
+            if success2:
+                strong_count = data2.get('count', 0)
+                self.log_test("Verdict Filter (STRONG)", strong_count >= 0, f"Found {strong_count} STRONG factors")
+            
+            # Test ELITE filter
+            success3, data3, status3 = self.make_request('GET', 'factor-ranker/rankings?verdict=ELITE&limit=10')
+            if success3:
+                elite_count = data3.get('count', 0)
+                self.log_test("Verdict Filter (ELITE)", elite_count >= 0, f"Found {elite_count} ELITE factors")
+            
+            return True
+        else:
+            self.log_test("Verdict Filtering", False, f"Status: {status}, Data: {data}")
+            return False
+
+    def test_approved_filtering(self):
+        """Test GET /api/factor-ranker/rankings?approved_only=true - только approved"""
+        print("\n🔍 Testing Approved Filtering...")
+        
+        success, data, status = self.make_request('GET', 'factor-ranker/rankings?approved_only=true&limit=100')
+        
+        if success:
+            rankings = data.get('rankings', [])
+            count = data.get('count', 0)
+            filters = data.get('filters', {})
+            
+            self.log_test("Approved Only Filter", count > 0, f"Found {count} approved factors")
+            
+            # Verify all returned rankings are approved
+            if rankings:
+                approved_count = sum(1 for r in rankings if r.get('approved', False))
+                self.log_test("Approved Consistency", approved_count == len(rankings), 
+                            f"{approved_count}/{len(rankings)} are approved")
+            
+            return count > 0
+        else:
+            self.log_test("Approved Filtering", False, f"Status: {status}, Data: {data}")
+            return False
+
+    def test_top_factors(self):
+        """Test GET /api/factor-ranker/top?n=20 - top factors"""
+        print("\n🔍 Testing Top Factors...")
+        
+        success, data, status = self.make_request('GET', 'factor-ranker/top?n=20')
+        
+        if success:
+            top_factors = data.get('top_factors', [])
+            count = data.get('count', 0)
+            
+            self.log_test("Top Factors (n=20)", count > 0, f"Retrieved {count} top factors")
+            
+            # Check if factors are sorted by composite score (descending)
+            if len(top_factors) >= 2:
+                scores = [f.get('composite_score', 0) for f in top_factors]
+                is_sorted = all(scores[i] >= scores[i+1] for i in range(len(scores)-1))
+                self.log_test("Top Factors Sorted", is_sorted, f"Scores: {scores[:5]}...")
+            
+            # Test different n values
+            success2, data2, status2 = self.make_request('GET', 'factor-ranker/top?n=10')
+            if success2:
+                top_10_count = data2.get('count', 0)
+                self.log_test("Top Factors (n=10)", top_10_count > 0, f"Retrieved {top_10_count} top factors")
+            
+            return count > 0
+        else:
+            self.log_test("Top Factors", False, f"Status: {status}, Data: {data}")
+            return False
+
+    def test_approved_factors(self):
+        """Test GET /api/factor-ranker/approved - все approved factors >= 100"""
+        print("\n🔍 Testing Approved Factors...")
+        
+        success, data, status = self.make_request('GET', 'factor-ranker/approved')
+        
+        if success:
+            approved_factors = data.get('approved_factors', [])
+            count = data.get('count', 0)
+            
+            if count >= 100:
+                self.log_test("Approved Factors >= 100", True, f"Found {count} approved factors")
+            else:
+                self.log_test("Approved Factors >= 100", False, f"Only {count} approved factors found")
+            
+            # Check that all returned factors are approved
+            if approved_factors:
+                approved_count = sum(1 for f in approved_factors if f.get('approved', False))
+                self.log_test("All Factors Approved", approved_count == len(approved_factors), 
+                            f"{approved_count}/{len(approved_factors)} are approved")
+            
+            return count >= 100
+        else:
+            self.log_test("Approved Factors", False, f"Status: {status}, Data: {data}")
+            return False
+
+    def test_verdicts_breakdown(self):
+        """Test GET /api/factor-ranker/verdicts - breakdown по verdicts"""
+        print("\n🔍 Testing Verdicts Breakdown...")
+        
+        success, data, status = self.make_request('GET', 'factor-ranker/verdicts')
+        
+        if success:
+            verdicts = data.get('verdicts', [])
+            counts = data.get('counts', {})
+            total = data.get('total', 0)
+            
+            expected_verdicts = ["ELITE", "STRONG", "PROMISING", "WEAK", "REJECTED"]
+            
+            self.log_test("Verdicts List", set(expected_verdicts).issubset(set(verdicts)), 
+                         f"Verdicts: {verdicts}")
+            
+            self.log_test("Verdict Counts", len(counts) > 0, f"Counts: {counts}")
+            
+            # Check that counts sum to total
+            if counts:
+                sum_counts = sum(counts.values())
+                self.log_test("Counts Sum Consistency", sum_counts == total, 
+                            f"Sum: {sum_counts}, Total: {total}")
+            
+            # Check for expected distribution (based on agent context)
+            strong_count = counts.get('STRONG', 0)
+            promising_count = counts.get('PROMISING', 0)
+            
+            self.log_test("Expected Distribution", strong_count >= 4 and promising_count >= 100, 
+                         f"STRONG: {strong_count}, PROMISING: {promising_count}")
+            
+            return len(counts) > 0 and total > 0
+        else:
+            self.log_test("Verdicts Breakdown", False, f"Status: {status}, Data: {data}")
+            return False
+
+    def test_ranking_runs(self):
+        """Test GET /api/factor-ranker/runs - история ranking runs"""
+        print("\n🔍 Testing Ranking Runs History...")
+        
+        success, data, status = self.make_request('GET', 'factor-ranker/runs?limit=10')
+        
+        if success:
+            runs = data.get('runs', [])
+            count = data.get('count', 0)
+            
+            self.log_test("Ranking Runs History", count >= 0, f"Found {count} ranking runs")
+            
+            # Check run structure if runs exist
+            if runs:
+                run = runs[0]
+                required_fields = ['run_id', 'status', 'total_evaluated', 'approved_count']
+                present_fields = [field for field in required_fields if field in run]
+                self.log_test("Run Structure", len(present_fields) >= 3, f"Present fields: {present_fields}")
+                
+                # Check for completed runs
+                completed_runs = [r for r in runs if r.get('status') == 'completed']
+                self.log_test("Completed Runs", len(completed_runs) > 0, 
+                            f"{len(completed_runs)}/{len(runs)} completed")
+            
+            return True
+        else:
+            self.log_test("Ranking Runs History", False, f"Status: {status}, Data: {data}")
+            return False
+
+    def test_individual_factor_ranking(self):
+        """Test GET /api/factor-ranker/{factor_id} - получение ranking конкретного фактора"""
+        print("\n🔍 Testing Individual Factor Ranking...")
+        
+        # First, get a list of rankings to find a valid factor ID
+        success, data, status = self.make_request('GET', 'factor-ranker/rankings?limit=10')
+        
+        if success:
+            rankings = data.get('rankings', [])
+            
+            if rankings:
+                factor_id = rankings[0]['factor_id']
+                success2, data2, status2 = self.make_request('GET', f'factor-ranker/{factor_id}')
+                
+                if success2:
+                    ranking_data = data2.get('ranking', {})
+                    
+                    self.log_test("Individual Factor Ranking", True, f"Retrieved ranking for: {factor_id}")
+                    
+                    # Check ranking structure
+                    required_fields = ['factor_id', 'verdict', 'composite_score', 'ic', 'sharpe', 'stability']
+                    present_fields = [field for field in required_fields if field in ranking_data]
+                    self.log_test("Ranking Structure", len(present_fields) >= 5, f"Present fields: {present_fields}")
+                    
+                    return True
+                else:
+                    self.log_test("Individual Factor Ranking", False, f"Status: {status2}, Data: {data2}")
+            else:
+                self.log_test("Individual Factor Ranking", False, "No rankings found for retrieval test")
+        else:
+            self.log_test("Individual Factor Ranking", False, f"Status: {status}, Data: {data}")
+        
+        return False
+
+    def test_single_factor_evaluation(self):
+        """Test POST /api/factor-ranker/evaluate/{factor_id} - оценка одного фактора"""
+        print("\n🔍 Testing Single Factor Evaluation...")
+        
+        # First, get a factor ID from the generator
+        success, data, status = self.make_request('GET', 'factor-generator/factors?limit=5')
+        
+        if success:
+            factors = data.get('factors', [])
+            
+            if factors:
+                factor_id = factors[0]['factor_id']
+                success2, data2, status2 = self.make_request('POST', f'factor-ranker/evaluate/{factor_id}')
+                
+                if success2:
+                    metrics = data2.get('metrics', {})
+                    evaluated_factor_id = data2.get('factor_id', '')
+                    
+                    self.log_test("Single Factor Evaluation", True, f"Evaluated factor: {evaluated_factor_id}")
+                    
+                    # Check metrics structure
+                    required_metrics = ['ic', 'sharpe', 'stability', 'composite_score', 'verdict']
+                    present_metrics = [metric for metric in required_metrics if metric in metrics]
+                    self.log_test("Metrics Structure", len(present_metrics) >= 4, f"Present metrics: {present_metrics}")
+                    
+                    return True
+                else:
+                    self.log_test("Single Factor Evaluation", False, f"Status: {status2}, Data: {data2}")
+            else:
+                self.log_test("Single Factor Evaluation", False, "No factors found for evaluation test")
+        else:
+            self.log_test("Single Factor Evaluation", False, f"Status: {status}, Data: {data}")
+        
+        return False
+
+    def test_phase_integration(self):
+        """Test integration with previous phases"""
+        print("\n🔍 Testing Phase Integration...")
+        
+        # Test PHASE 13.3 Factor Generator
+        success1, data1, status1 = self.make_request('GET', 'factor-generator/stats')
+        if success1:
+            generator_stats = data1.get('generator', {})
+            repository_stats = data1.get('repository', {})
+            total_factors = repository_stats.get('total_factors', 0)
+            self.log_test("PHASE 13.3 Factor Generator", total_factors >= 1000, f"Found {total_factors} factors")
+        else:
+            self.log_test("PHASE 13.3 Factor Generator", False, f"Status: {status1}")
+        
+        # Test PHASE 13.2 Feature Library
+        success2, data2, status2 = self.make_request('GET', 'alpha-features/stats')
+        if success2:
+            registry_stats = data2.get('registry', {})
+            total_features = registry_stats.get('total_features', 0)
+            self.log_test("PHASE 13.2 Feature Library", total_features >= 300, f"Found {total_features} features")
+        else:
+            self.log_test("PHASE 13.2 Feature Library", False, f"Status: {status2}")
+        
+        return success1 and success2
+
+    def run_all_tests(self):
+        """Run all Factor Ranker test cases."""
+        print("=" * 80)
+        print("🚀 PHASE 13.4 Factor Ranker - Backend API Tests")
+        print("=" * 80)
+        
+        # Core health and stats tests
+        self.test_factor_ranker_health()
+        self.test_factor_ranker_stats()
+        
+        # Ranking execution test
+        self.test_ranking_execution()
+        
+        # Rankings retrieval tests
+        self.test_rankings_listing()
+        self.test_verdict_filtering()
+        self.test_approved_filtering()
+        self.test_top_factors()
+        self.test_approved_factors()
+        self.test_verdicts_breakdown()
+        self.test_ranking_runs()
+        
+        # Individual operations tests
+        self.test_individual_factor_ranking()
+        self.test_single_factor_evaluation()
+        
+        # Integration tests
+        self.test_phase_integration()
+        
+        # Print summary
+        print("\n" + "=" * 80)
+        print("📊 FACTOR RANKER TEST SUMMARY")
+        print("=" * 80)
+        print(f"Tests Run: {self.tests_run}")
+        print(f"Tests Passed: {self.tests_passed}")
+        print(f"Tests Failed: {len(self.failed_tests)}")
+        print(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            print("\n❌ FAILED TESTS:")
+            for i, failure in enumerate(self.failed_tests, 1):
+                print(f"{i}. {failure['test']}")
+                if failure['details']:
+                    print(f"   {failure['details']}")
+        
+        return self.tests_passed == self.tests_run
+
+
     """PHASE 13.3 Factor Generator API Tests"""
     
     def __init__(self, base_url: str = "https://pattern-detector-10.preview.emergentagent.com"):
