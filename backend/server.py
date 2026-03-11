@@ -103,6 +103,14 @@ try:
 except ImportError as e:
     print(f"[Routes] Alpha Factory router not available: {e}")
 
+# PHASE 13.2 Feature Library Router
+try:
+    from modules.alpha_factory.feature_library.feature_routes import router as feature_library_router
+    app.include_router(feature_library_router)
+    print("[Routes] PHASE 13.2 Feature Library router registered")
+except ImportError as e:
+    print(f"[Routes] Feature Library router not available: {e}")
+
 
 # ============================================
 # TA Analysis Endpoints (Minimal)
