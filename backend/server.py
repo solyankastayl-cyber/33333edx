@@ -210,13 +210,14 @@ async def root():
     """Root endpoint"""
     return {
         "name": "TA Engine",
-        "version": "13.1.0",
-        "phase": "PHASE 13.1 - Alpha Node Registry",
+        "version": "13.2.0",
+        "phase": "PHASE 13.2 - Alpha Feature Library",
         "status": "running",
         "endpoints": {
             "health": "/api/health",
             "db_health": "/api/system/db-health",
             "alpha_factory": "/api/alpha-factory/*",
+            "feature_library": "/api/alpha-features/*",
             "ta_registry": "/api/ta/registry",
             "ta_patterns": "/api/ta/patterns",
             "ta_analyze": "/api/ta/analyze"
