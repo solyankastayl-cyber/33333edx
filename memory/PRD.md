@@ -1,7 +1,7 @@
-# TA Engine PRD - PHASE 13.2 Alpha Feature Library
+# TA Engine PRD - PHASE 13.3 Factor Generator
 
 ## Original Problem Statement
-TA Engine - Institutional-grade quant trading platform. Building autonomous Alpha Factory for systematic signal generation. PHASE 13.2 implements Feature Library as foundation for Factor Generator that will create 10,000+ factors.
+TA Engine - Institutional-grade quant trading platform. Building autonomous Alpha Factory for systematic signal generation. PHASE 13.3 implements Factor Generator that converts 308 features into 1000+ candidate factors.
 
 ## Architecture Overview
 ```
@@ -14,116 +14,140 @@ backend/
 │   │   ├── alpha_node_registry.py   # PHASE 13.1 - Node registry
 │   │   ├── alpha_repository.py      # PHASE 13.1 - Node persistence
 │   │   ├── alpha_routes.py          # PHASE 13.1 - Node API
-│   │   └── feature_library/         # PHASE 13.2 ✅
-│   │       ├── feature_types.py     # Feature dataclass, 308 features
-│   │       ├── feature_registry.py  # Central registry
-│   │       ├── feature_transforms.py # 16 transforms
-│   │       ├── feature_repository.py # MongoDB persistence
-│   │       └── feature_routes.py    # API endpoints
+│   │   ├── feature_library/         # PHASE 13.2
+│   │   │   ├── feature_types.py     # 308 features
+│   │   │   ├── feature_registry.py
+│   │   │   ├── feature_transforms.py # 16 transforms
+│   │   │   └── feature_routes.py
+│   │   └── factor_generator/        # PHASE 13.3 ✅
+│   │       ├── factor_types.py      # Factor, FactorBatchRun
+│   │       ├── factor_templates.py  # 8 templates
+│   │       ├── feature_selector.py  # Category compatibility
+│   │       ├── factor_combinator.py # Creates factors
+│   │       ├── factor_constraints.py # Anti-garbage
+│   │       ├── factor_transformer.py # 14 transforms
+│   │       ├── factor_generator.py  # Main engine
+│   │       ├── factor_repository.py
+│   │       └── factor_routes.py
 │   └── [other modules...]
-├── datasets/                  # Historical data (BTC, SPX, DXY)
-└── server.py                  # FastAPI application v13.2.0
+├── datasets/
+└── server.py                  # FastAPI v13.3.0
 ```
 
 ## What's Been Implemented
 
-### PHASE 13.1 — Alpha Node Registry (2026-03-11) ✅
+### PHASE 13.1 — Alpha Node Registry ✅
 - 89 nodes across 9 types
-- CRUD API, search, stats
 
-### PHASE 13.2 — Alpha Feature Library (2026-03-11) ✅
+### PHASE 13.2 — Alpha Feature Library ✅
+- 308+ features across 8 categories
+- 16 transforms
+
+### PHASE 13.3 — Factor Generator (2026-03-11) ✅
 **Core Features:**
-- **308 features** registered across 8 categories
-- 16 transforms available
-- MongoDB persistence with indexes
-- Full CRUD + Search API
-- Transform computation layer
+- **1140+ factors** generated from 308 features
+- 8 factor templates
+- Feature Selector (category compatibility)
+- Factor Combinator
+- Factor Constraints (anti-garbage)
+- MongoDB persistence
 
-**Feature Categories:**
-| Category | Count | Examples |
-|----------|-------|----------|
-| price | 63 | returns, momentum, zscore, percentile, RSI |
-| volatility | 35 | ATR, realized vol, compression, expansion |
-| volume | 30 | spikes, profiles, OBV, VWAP |
-| liquidity | 33 | orderbook depth, spread, liquidation |
-| structure | 25 | BOS, CHOCH, swings, FVG, order blocks |
-| microstructure | 30 | flow imbalance, aggression, toxicity |
-| correlation | 61 | BTC-SPX, cross-asset, lead-lag |
-| context | 31 | funding, OI, macro regime, sessions |
+**Factor Templates:**
+| Template | Count | Description |
+|----------|-------|-------------|
+| single_feature | 50 | A |
+| pair_feature | 200 | A + B |
+| triple_feature | 200 | A + B + C |
+| ratio_feature | 190 | A / B |
+| difference_feature | 150 | A - B |
+| interaction_feature | 200 | A * B |
+| regime_conditioned | 150 | A in regime R |
+| conditional_feature | - | A if B |
 
-**Transforms Available:**
-- raw, lag, difference, pct_change
-- rolling_mean, rolling_std
-- zscore, percentile_rank, minmax_scale
-- log_transform, ratio
-- binary_threshold, clip, rank
-- ema, sma
+**Factor Families:**
+| Family | Count |
+|--------|-------|
+| momentum | 555 |
+| breakout | 240 |
+| regime | 150 |
+| microstructure | 47 |
+| volume | 46 |
+| correlation | 44 |
+| structure | 40 |
+| macro | 13 |
+| volatility | 5 |
 
-**API Endpoints (Feature Library):**
+**API Endpoints (Factor Generator):**
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/alpha-features/health` | GET | Health check |
-| `/api/alpha-features/stats` | GET | Statistics |
-| `/api/alpha-features` | GET | List features |
-| `/api/alpha-features/{id}` | GET | Get feature |
-| `/api/alpha-features` | POST | Create feature |
-| `/api/alpha-features/{id}` | PUT | Update feature |
-| `/api/alpha-features/{id}` | DELETE | Deprecate |
-| `/api/alpha-features/categories` | GET | Category breakdown |
-| `/api/alpha-features/transforms` | GET | Available transforms |
-| `/api/alpha-features/search` | GET | Search features |
-| `/api/alpha-features/tags` | GET | All unique tags |
-| `/api/alpha-features/by-category/{cat}` | GET | Features by category |
-| `/api/alpha-features/transform` | POST | Apply transform |
-| `/api/alpha-features/{id}/dependencies` | GET | Feature dependencies |
+| `/api/factor-generator/health` | GET | Health check |
+| `/api/factor-generator/stats` | GET | Statistics |
+| `/api/factor-generator/run` | POST | Generate factors |
+| `/api/factor-generator/generate-batch` | POST | Alias for /run |
+| `/api/factor-generator/factors` | GET | List factors |
+| `/api/factor-generator/factors/search` | GET | Search factors |
+| `/api/factor-generator/families` | GET | Family breakdown |
+| `/api/factor-generator/templates` | GET | Template breakdown |
+| `/api/factor-generator/runs` | GET | Generation history |
+| `/api/factor-generator/{factor_id}` | GET | Get factor |
+| `/api/factor-generator/factors` | DELETE | Clear all |
 
 ## Test Results
 - PHASE 13.1: 21/21 tests passed (100%)
-- PHASE 13.2: 95% (minor REST status code issue fixed)
-- MongoDB connected and healthy
-- All CRUD operations working
+- PHASE 13.2: 95%+ passed
+- PHASE 13.3: 48/48 tests passed (100%)
 
-## Roadmap
-
-### Completed Phases
-- [x] PHASE 13.1 — Alpha Node Registry ✅ (89 nodes)
-- [x] PHASE 13.2 — Alpha Feature Library ✅ (308 features)
-
-### Next Phases
-- [ ] PHASE 13.3 — Factor Generator (templates, combinator, transformer)
-- [ ] PHASE 13.4 — Alpha Graph (logical relationships)
-- [ ] PHASE 13.5 — Alpha DAG (computational dependencies)
-- [ ] PHASE 13.6 — Factor Ranker
-- [ ] PHASE 13.7 — Alpha Deployment
-
-### Future
-- PHASE 14 — Meta Portfolio Layer
-- PHASE 15 — Risk Intelligence
-
-## Tech Stack
-- Python (FastAPI)
-- MongoDB (ta_engine database)
-- 16 built-in transforms (pure Python)
-
-## Data Pipeline
+## Alpha Factory Pipeline
 ```
 Feature Library (308 features)
       ↓
 Factor Generator (templates + combinator)
       ↓
-10,000+ Candidate Factors
+1140+ Candidate Factors
       ↓
-Factor Ranker
+Factor Ranker (NEXT)
       ↓
 Alpha Graph / DAG
       ↓
 Alpha Deployment
 ```
 
-## Feature to Factor Flow
-Features → raw building blocks
-Factors → trading constructs built from features
+## Roadmap
 
-Example:
-- Features: volatility_compression, breakout_pressure, volume_confirmation
-- Factor: breakout_quality_factor (combines all three with weights)
+### Completed Phases
+- [x] PHASE 13.1 — Alpha Node Registry ✅ (89 nodes)
+- [x] PHASE 13.2 — Alpha Feature Library ✅ (308 features)
+- [x] PHASE 13.3 — Factor Generator ✅ (1140+ factors)
+
+### Next Phases
+- [ ] PHASE 13.4 — Factor Ranker (IC, Sharpe, Decay, Stability)
+- [ ] PHASE 13.5 — Alpha Graph (supports/contradicts/amplifies)
+- [ ] PHASE 13.6 — Alpha DAG (computational dependencies)
+- [ ] PHASE 13.7 — Alpha Deployment
+
+### Future
+- PHASE 14 — Meta Portfolio Layer
+- PHASE 15 — Risk Intelligence
+
+## Factor Families (Target Mix)
+| Family | Current | Target |
+|--------|---------|--------|
+| trend | 0 | 150 |
+| momentum | 555 | 200 |
+| breakout | 240 | 150 |
+| reversal | 0 | 100 |
+| regime | 150 | 150 |
+| liquidity | 0 | 100 |
+| correlation | 44 | 100 |
+| microstructure | 47 | 100 |
+
+## Tech Stack
+- Python (FastAPI)
+- MongoDB (ta_engine database)
+- Pure Python transforms (no pandas required)
+
+## Key Insights
+- Factor Generator produces candidate factors, not final signals
+- Ranker will filter to ~100-200 approved factors
+- DAG will compute factor values in real-time
+- Graph will reason about factor relationships
