@@ -119,6 +119,14 @@ try:
 except ImportError as e:
     print(f"[Routes] Factor Generator router not available: {e}")
 
+# PHASE 13.4 Factor Ranker Router
+try:
+    from modules.alpha_factory.factor_ranker.ranker_routes import router as factor_ranker_router
+    app.include_router(factor_ranker_router)
+    print("[Routes] PHASE 13.4 Factor Ranker router registered")
+except ImportError as e:
+    print(f"[Routes] Factor Ranker router not available: {e}")
+
 
 # ============================================
 # TA Analysis Endpoints (Minimal)
