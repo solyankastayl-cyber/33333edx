@@ -163,11 +163,7 @@ class FactorCombinator:
             expected_direction=infer_direction(inputs, categories),
             complexity=3,
             description=f"Triple factor: {inputs[0]} + {inputs[1]} + {inputs[2]}",
-            tags=list(set(
-                feature1.get("tags", []) + 
-                feature2.get("tags", []) + 
-                feature3.get("tags", [])
-            )) + ["triple"],
+            tags=self._flatten_tags(feature1, feature2, feature3) + ["triple"],
             created_at=datetime.now(timezone.utc),
             status=FactorStatus.CANDIDATE
         )
