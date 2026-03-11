@@ -192,7 +192,7 @@ class FactorCombinator:
             expected_direction=infer_direction(inputs, categories),
             complexity=2,
             description=f"Ratio factor: {inputs[0]} / {inputs[1]}",
-            tags=list(set(numerator.get("tags", []) + denominator.get("tags", []))) + ["ratio"],
+            tags=self._flatten_tags(numerator, denominator) + ["ratio"],
             created_at=datetime.now(timezone.utc),
             status=FactorStatus.CANDIDATE
         )
