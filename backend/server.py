@@ -135,6 +135,14 @@ try:
 except ImportError as e:
     print(f"[Routes] Alpha Graph router not available: {e}")
 
+# PHASE 13.6 Alpha DAG Router
+try:
+    from modules.alpha_factory.alpha_dag.dag_routes import router as alpha_dag_router
+    app.include_router(alpha_dag_router)
+    print("[Routes] PHASE 13.6 Alpha DAG router registered")
+except ImportError as e:
+    print(f"[Routes] Alpha DAG router not available: {e}")
+
 
 # ============================================
 # TA Analysis Endpoints (Minimal)
