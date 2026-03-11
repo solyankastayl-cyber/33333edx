@@ -250,7 +250,7 @@ class FactorCombinator:
             expected_direction=infer_direction(inputs, categories),
             complexity=2,
             description=f"Conditional factor: {inputs[0]} if {inputs[1]}",
-            tags=list(set(signal_feature.get("tags", []) + condition_feature.get("tags", []))) + ["conditional"],
+            tags=self._flatten_tags(signal_feature, condition_feature) + ["conditional"],
             created_at=datetime.now(timezone.utc),
             status=FactorStatus.CANDIDATE
         )
