@@ -133,7 +133,7 @@ class FactorCombinator:
             expected_direction=infer_direction(inputs, categories),
             complexity=2,
             description=f"Pair factor: {inputs[0]} + {inputs[1]}",
-            tags=list(set(feature1.get("tags", []) + feature2.get("tags", []))) + ["pair"],
+            tags=self._flatten_tags(feature1, feature2) + ["pair"],
             created_at=datetime.now(timezone.utc),
             status=FactorStatus.CANDIDATE
         )
