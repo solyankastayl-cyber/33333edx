@@ -1664,3 +1664,286 @@ DEFAULT_FEATURES.extend([
         tags=["context", "leverage", "percentile"]
     ),
 ])
+
+# -----------------------------------------------------------------------------
+# ADDITIONAL FEATURES TO REACH 300+ (Extended Feature Set)
+# -----------------------------------------------------------------------------
+
+# Additional Price Features
+for lag in [1, 2, 3, 5, 10]:
+    DEFAULT_FEATURES.append(Feature(
+        feature_id=f"price_lag_{lag}",
+        category=FeatureCategory.PRICE,
+        inputs=["close"],
+        transform=FeatureTransform.LAG,
+        params={"periods": lag},
+        output_type="numeric",
+        description=f"Price lagged by {lag} periods",
+        tags=["price", "lag"]
+    ))
+
+# RSI variations
+for period in [7, 14, 21, 28]:
+    DEFAULT_FEATURES.append(Feature(
+        feature_id=f"rsi_{period}",
+        category=FeatureCategory.PRICE,
+        inputs=["close"],
+        transform=FeatureTransform.RAW,
+        params={"period": period},
+        output_type="numeric",
+        value_range=[0.0, 100.0],
+        description=f"{period}-period RSI",
+        tags=["price", "momentum", "rsi"]
+    ))
+
+# Additional Volatility Features
+for window in [3, 5, 7, 10, 14, 21]:
+    DEFAULT_FEATURES.append(Feature(
+        feature_id=f"price_volatility_{window}",
+        category=FeatureCategory.VOLATILITY,
+        inputs=["returns_1d"],
+        transform=FeatureTransform.ROLLING_STD,
+        params={"window": window},
+        output_type="numeric",
+        description=f"{window}-day price volatility",
+        tags=["volatility", "short_term"]
+    ))
+
+# High-Low Range Features
+for period in [5, 10, 20, 50]:
+    DEFAULT_FEATURES.extend([
+        Feature(
+            feature_id=f"range_high_{period}",
+            category=FeatureCategory.PRICE,
+            inputs=["high"],
+            transform=FeatureTransform.ROLLING_MEAN,
+            params={"window": period},
+            output_type="numeric",
+            description=f"{period}-period rolling high",
+            tags=["price", "range", "high"]
+        ),
+        Feature(
+            feature_id=f"range_low_{period}",
+            category=FeatureCategory.PRICE,
+            inputs=["low"],
+            transform=FeatureTransform.ROLLING_MEAN,
+            params={"window": period},
+            output_type="numeric",
+            description=f"{period}-period rolling low",
+            tags=["price", "range", "low"]
+        ),
+    ])
+
+# Volume EMAs
+for period in [5, 10, 20, 50, 100]:
+    DEFAULT_FEATURES.append(Feature(
+        feature_id=f"volume_ema_{period}",
+        category=FeatureCategory.VOLUME,
+        inputs=["volume"],
+        transform=FeatureTransform.EMA,
+        params={"period": period},
+        output_type="numeric",
+        description=f"{period}-period volume EMA",
+        tags=["volume", "ema"]
+    ))
+
+# Orderbook depth at different levels
+for level in [1, 2, 3, 5, 10]:
+    DEFAULT_FEATURES.extend([
+        Feature(
+            feature_id=f"bid_depth_level_{level}",
+            category=FeatureCategory.LIQUIDITY,
+            inputs=["orderbook_bids"],
+            transform=FeatureTransform.RAW,
+            params={"level": level},
+            output_type="numeric",
+            description=f"Bid depth at level {level}",
+            tags=["liquidity", "orderbook", "bid"]
+        ),
+        Feature(
+            feature_id=f"ask_depth_level_{level}",
+            category=FeatureCategory.LIQUIDITY,
+            inputs=["orderbook_asks"],
+            transform=FeatureTransform.RAW,
+            params={"level": level},
+            output_type="numeric",
+            description=f"Ask depth at level {level}",
+            tags=["liquidity", "orderbook", "ask"]
+        ),
+    ])
+
+# Flow momentum at different windows
+for window in [3, 5, 10, 20, 30]:
+    DEFAULT_FEATURES.append(Feature(
+        feature_id=f"flow_momentum_{window}",
+        category=FeatureCategory.MICROSTRUCTURE,
+        inputs=["order_flow_imbalance"],
+        transform=FeatureTransform.ROLLING_MEAN,
+        params={"window": window},
+        output_type="numeric",
+        value_range=[-1.0, 1.0],
+        description=f"{window}-period flow momentum",
+        tags=["microstructure", "flow", "momentum"]
+    ))
+
+# Trade intensity features
+for window in [5, 10, 20, 50]:
+    DEFAULT_FEATURES.append(Feature(
+        feature_id=f"trade_intensity_{window}",
+        category=FeatureCategory.MICROSTRUCTURE,
+        inputs=["trade_count"],
+        transform=FeatureTransform.ROLLING_MEAN,
+        params={"window": window},
+        output_type="numeric",
+        description=f"{window}-period trade intensity",
+        tags=["microstructure", "intensity"]
+    ))
+
+# Additional Correlation Features
+extra_corr_pairs = [
+    ("btc", "vix"), ("eth", "dxy"), ("btc", "tnx"), ("btc", "oil"),
+    ("eth", "gold"), ("sol", "spx"), ("btc", "usdt_dominance")
+]
+for asset1, asset2 in extra_corr_pairs:
+    for window in [14, 30, 60]:
+        DEFAULT_FEATURES.append(Feature(
+            feature_id=f"corr_{asset1}_{asset2}_{window}d",
+            category=FeatureCategory.CORRELATION,
+            inputs=[f"{asset1}_returns", f"{asset2}_returns"],
+            transform=FeatureTransform.ROLLING_MEAN,
+            params={"window": window},
+            output_type="numeric",
+            value_range=[-1.0, 1.0],
+            description=f"{window}-day {asset1.upper()}-{asset2.upper()} correlation",
+            tags=["correlation", asset1, asset2]
+        ))
+
+# Structural confirmations
+DEFAULT_FEATURES.extend([
+    Feature(
+        feature_id="hh_hl_count",
+        category=FeatureCategory.STRUCTURE,
+        inputs=["swing_highs", "swing_lows"],
+        transform=FeatureTransform.RAW,
+        params={"lookback": 10},
+        output_type="numeric",
+        description="Higher high / higher low count",
+        tags=["structure", "trend", "confirmation"]
+    ),
+    Feature(
+        feature_id="ll_lh_count",
+        category=FeatureCategory.STRUCTURE,
+        inputs=["swing_highs", "swing_lows"],
+        transform=FeatureTransform.RAW,
+        params={"lookback": 10},
+        output_type="numeric",
+        description="Lower low / lower high count",
+        tags=["structure", "trend", "confirmation"]
+    ),
+    Feature(
+        feature_id="structure_strength",
+        category=FeatureCategory.STRUCTURE,
+        inputs=["bos_count", "choch_count"],
+        transform=FeatureTransform.RAW,
+        output_type="numeric",
+        description="Overall structure strength",
+        tags=["structure", "strength"]
+    ),
+    Feature(
+        feature_id="consolidation_score",
+        category=FeatureCategory.STRUCTURE,
+        inputs=["range_width", "volatility"],
+        transform=FeatureTransform.RAW,
+        output_type="numeric",
+        value_range=[0.0, 1.0],
+        description="Consolidation detection score",
+        tags=["structure", "consolidation"]
+    ),
+])
+
+# Context momentum features
+for period in [5, 10, 20]:
+    DEFAULT_FEATURES.extend([
+        Feature(
+            feature_id=f"funding_momentum_{period}",
+            category=FeatureCategory.CONTEXT,
+            inputs=["funding_rate"],
+            transform=FeatureTransform.DIFFERENCE,
+            params={"periods": period},
+            output_type="numeric",
+            description=f"{period}-period funding rate momentum",
+            tags=["context", "funding", "momentum"]
+        ),
+        Feature(
+            feature_id=f"oi_momentum_{period}",
+            category=FeatureCategory.CONTEXT,
+            inputs=["open_interest"],
+            transform=FeatureTransform.DIFFERENCE,
+            params={"periods": period},
+            output_type="numeric",
+            description=f"{period}-period OI momentum",
+            tags=["context", "open_interest", "momentum"]
+        ),
+    ])
+
+# Indicator divergence features
+DEFAULT_FEATURES.extend([
+    Feature(
+        feature_id="rsi_divergence",
+        category=FeatureCategory.PRICE,
+        inputs=["price", "rsi_14"],
+        transform=FeatureTransform.RAW,
+        output_type="categorical",
+        description="RSI divergence detection",
+        tags=["price", "divergence", "rsi"]
+    ),
+    Feature(
+        feature_id="macd_divergence",
+        category=FeatureCategory.PRICE,
+        inputs=["price", "macd"],
+        transform=FeatureTransform.RAW,
+        output_type="categorical",
+        description="MACD divergence detection",
+        tags=["price", "divergence", "macd"]
+    ),
+    Feature(
+        feature_id="obv_divergence",
+        category=FeatureCategory.VOLUME,
+        inputs=["price", "obv"],
+        transform=FeatureTransform.RAW,
+        output_type="categorical",
+        description="OBV divergence detection",
+        tags=["volume", "divergence", "obv"]
+    ),
+])
+
+# Regime-specific features
+DEFAULT_FEATURES.extend([
+    Feature(
+        feature_id="trend_regime",
+        category=FeatureCategory.CONTEXT,
+        inputs=["adx", "price_trend"],
+        transform=FeatureTransform.RAW,
+        output_type="categorical",
+        description="Current trend regime",
+        tags=["context", "regime", "trend"]
+    ),
+    Feature(
+        feature_id="range_regime",
+        category=FeatureCategory.CONTEXT,
+        inputs=["atr_percentile", "range_width"],
+        transform=FeatureTransform.RAW,
+        output_type="categorical",
+        description="Current range regime",
+        tags=["context", "regime", "range"]
+    ),
+    Feature(
+        feature_id="breakout_regime",
+        category=FeatureCategory.CONTEXT,
+        inputs=["volatility_compression", "volume_spike"],
+        transform=FeatureTransform.RAW,
+        output_type="categorical",
+        description="Breakout regime detection",
+        tags=["context", "regime", "breakout"]
+    ),
+])
