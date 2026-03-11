@@ -1,11 +1,24 @@
 #!/usr/bin/env python3
 """
-PHASE 13.3 Factor Generator - Backend API Tests
-===============================================
-Comprehensive testing for Factor Generator endpoints.
+PHASE 13.4 Factor Ranker - Backend API Tests
+============================================
+Comprehensive testing for Factor Ranker endpoints.
 
 Test Coverage:
-- PHASE 13.3 Factor Generator (NEW):
+- PHASE 13.4 Factor Ranker (NEW):
+  * Health check
+  * Stats (total_rankings >= 1000, approved_count >= 50)
+  * Ranking execution (POST /run)
+  * Rankings listing with filters
+  * Verdict filtering (PROMISING, STRONG, etc.)
+  * Approved factors filtering
+  * Top factors retrieval
+  * Approved factors count >= 100
+  * Verdicts breakdown
+  * Ranking runs history
+  * Individual factor ranking retrieval
+  * Single factor evaluation
+- PHASE 13.3 Factor Generator:
   * Health check
   * Stats (total_factors >= 1000)
   * Families (12 families)
