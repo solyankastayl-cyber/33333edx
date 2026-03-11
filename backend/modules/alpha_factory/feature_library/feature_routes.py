@@ -229,7 +229,7 @@ async def get_feature(feature_id: str):
     }
 
 
-@router.post("")
+@router.post("", status_code=201)
 async def create_feature(request: FeatureCreateRequest):
     """Create a new feature."""
     registry = get_registry()
