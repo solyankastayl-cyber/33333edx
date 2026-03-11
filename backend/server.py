@@ -72,8 +72,8 @@ async def health():
     return {
         "ok": True,
         "mode": "TA_ENGINE_ALPHA_FACTORY",
-        "version": "13.6.0",
-        "phase": "PHASE 13.6 - Alpha DAG",
+        "version": "13.7.0",
+        "phase": "PHASE 13.7 - Alpha Deployment",
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
@@ -142,6 +142,14 @@ try:
     print("[Routes] PHASE 13.6 Alpha DAG router registered")
 except ImportError as e:
     print(f"[Routes] Alpha DAG router not available: {e}")
+
+# PHASE 13.7 Alpha Deployment Router
+try:
+    from modules.alpha_factory.alpha_deployment.deployment_routes import router as alpha_deployment_router
+    app.include_router(alpha_deployment_router)
+    print("[Routes] PHASE 13.7 Alpha Deployment router registered")
+except ImportError as e:
+    print(f"[Routes] Alpha Deployment router not available: {e}")
 
 
 # ============================================
@@ -242,8 +250,8 @@ async def root():
     """Root endpoint"""
     return {
         "name": "TA Engine",
-        "version": "13.6.0",
-        "phase": "PHASE 13.6 - Alpha DAG",
+        "version": "13.7.0",
+        "phase": "PHASE 13.7 - Alpha Deployment",
         "status": "running",
         "endpoints": {
             "health": "/api/health",
@@ -254,6 +262,7 @@ async def root():
             "factor_ranker": "/api/factor-ranker/*",
             "alpha_graph": "/api/alpha-graph/*",
             "alpha_dag": "/api/alpha-dag/*",
+            "alpha_deployment": "/api/alpha-deployment/*",
             "ta_registry": "/api/ta/registry",
             "ta_patterns": "/api/ta/patterns",
             "ta_analyze": "/api/ta/analyze"
