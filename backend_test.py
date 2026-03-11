@@ -352,7 +352,8 @@ class FactorGeneratorTester:
         # Test PHASE 13.1 Node Registry
         success1, data1, status1 = self.make_request('GET', 'alpha-factory/stats')
         if success1:
-            total_nodes = data1.get('total_nodes', 0)
+            registry_stats = data1.get('registry', {})
+            total_nodes = registry_stats.get('total_nodes', 0)
             self.log_test("PHASE 13.1 Node Registry", total_nodes > 0, f"Found {total_nodes} nodes")
         else:
             self.log_test("PHASE 13.1 Node Registry", False, f"Status: {status1}")
