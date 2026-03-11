@@ -218,14 +218,15 @@ async def root():
     """Root endpoint"""
     return {
         "name": "TA Engine",
-        "version": "13.2.0",
-        "phase": "PHASE 13.2 - Alpha Feature Library",
+        "version": "13.3.0",
+        "phase": "PHASE 13.3 - Factor Generator",
         "status": "running",
         "endpoints": {
             "health": "/api/health",
             "db_health": "/api/system/db-health",
             "alpha_factory": "/api/alpha-factory/*",
             "feature_library": "/api/alpha-features/*",
+            "factor_generator": "/api/factor-generator/*",
             "ta_registry": "/api/ta/registry",
             "ta_patterns": "/api/ta/patterns",
             "ta_analyze": "/api/ta/analyze"
