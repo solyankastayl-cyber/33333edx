@@ -242,8 +242,8 @@ async def root():
     """Root endpoint"""
     return {
         "name": "TA Engine",
-        "version": "13.5.0",
-        "phase": "PHASE 13.5 - Alpha Graph",
+        "version": "13.6.0",
+        "phase": "PHASE 13.6 - Alpha DAG",
         "status": "running",
         "endpoints": {
             "health": "/api/health",
@@ -253,6 +253,7 @@ async def root():
             "factor_generator": "/api/factor-generator/*",
             "factor_ranker": "/api/factor-ranker/*",
             "alpha_graph": "/api/alpha-graph/*",
+            "alpha_dag": "/api/alpha-dag/*",
             "ta_registry": "/api/ta/registry",
             "ta_patterns": "/api/ta/patterns",
             "ta_analyze": "/api/ta/analyze"
