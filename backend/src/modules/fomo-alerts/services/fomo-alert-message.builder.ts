@@ -87,7 +87,7 @@ const MESSAGE_CONFIGS: Record<FomoAlertEvent, MessageConfig> = {
       }
       
       if (p.snapshotId) {
-        text += `\n🔗 <a href="https://market-reasoner.preview.emergentagent.com/snapshot/${p.snapshotId}">View snapshot</a>`;
+        text += `\n🔗 <a href="https://alpha-deploy-audit.preview.emergentagent.com/snapshot/${p.snapshotId}">View snapshot</a>`;
       }
       
       return text;

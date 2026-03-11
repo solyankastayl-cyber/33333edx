@@ -28,7 +28,7 @@ from typing import Dict, List, Any
 class AlphaDeploymentTester:
     """PHASE 13.7 Alpha Deployment API Tests"""
     
-    def __init__(self, base_url: str = "https://market-reasoner.preview.emergentagent.com"):
+    def __init__(self, base_url: str = "https://alpha-deploy-audit.preview.emergentagent.com"):
         self.base_url = base_url.rstrip('/')
         self.tests_run = 0
         self.tests_passed = 0

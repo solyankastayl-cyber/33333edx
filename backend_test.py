@@ -54,7 +54,7 @@ from typing import Dict, List, Any
 class FactorRankerTester:
     """PHASE 13.4 Factor Ranker API Tests"""
     
-    def __init__(self, base_url: str = "https://market-reasoner.preview.emergentagent.com"):
+    def __init__(self, base_url: str = "https://alpha-deploy-audit.preview.emergentagent.com"):
         self.base_url = base_url.rstrip('/')
         self.tests_run = 0
         self.tests_passed = 0
@@ -545,7 +545,7 @@ class FactorRankerTester:
 
     """PHASE 13.3 Factor Generator API Tests"""
     
-    def __init__(self, base_url: str = "https://market-reasoner.preview.emergentagent.com"):
+    def __init__(self, base_url: str = "https://alpha-deploy-audit.preview.emergentagent.com"):
         self.base_url = base_url.rstrip('/')
         self.tests_run = 0
         self.tests_passed = 0
@@ -919,7 +919,7 @@ class FactorRankerTester:
 class FactorGeneratorTester:
     """PHASE 13.3 Factor Generator API Tests"""
     
-    def __init__(self, base_url: str = "https://market-reasoner.preview.emergentagent.com"):
+    def __init__(self, base_url: str = "https://alpha-deploy-audit.preview.emergentagent.com"):
         self.base_url = base_url.rstrip('/')
         self.tests_run = 0
         self.tests_passed = 0
@@ -1069,7 +1069,7 @@ class FactorGeneratorTester:
 
 
 class AlphaFeatureLibraryTester:
-    def __init__(self, base_url: str = "https://market-reasoner.preview.emergentagent.com"):
+    def __init__(self, base_url: str = "https://alpha-deploy-audit.preview.emergentagent.com"):
         self.base_url = base_url.rstrip('/')
         self.tests_run = 0
         self.tests_passed = 0
