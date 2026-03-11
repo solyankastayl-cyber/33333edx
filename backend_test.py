@@ -890,17 +890,34 @@ class AlphaFeatureLibraryTester:
 
 def main():
     """Main test execution."""
-    tester = AlphaFeatureLibraryTester()
+    print("🔥 Starting Comprehensive Backend API Testing")
+    print("=" * 80)
     
-    try:
-        success = tester.run_all_tests()
-        return 0 if success else 1
-    except KeyboardInterrupt:
-        print("\n\n⚠️  Tests interrupted by user")
-        return 1
-    except Exception as e:
-        print(f"\n\n💥 Test execution failed: {str(e)}")
-        return 1
+    # Test PHASE 13.3 Factor Generator
+    factor_tester = FactorGeneratorTester()
+    factor_success = factor_tester.run_all_tests()
+    
+    print("\n" + "=" * 80)
+    
+    # Test PHASE 13.2 Feature Library (for completeness)
+    feature_tester = AlphaFeatureLibraryTester()
+    feature_success = feature_tester.run_all_tests()
+    
+    # Overall summary
+    print("\n" + "=" * 80)
+    print("🏁 OVERALL TEST SUMMARY")
+    print("=" * 80)
+    print(f"Factor Generator Tests: {'✅ PASS' if factor_success else '❌ FAIL'}")
+    print(f"Feature Library Tests: {'✅ PASS' if feature_success else '❌ FAIL'}")
+    
+    total_tests = factor_tester.tests_run + feature_tester.tests_run
+    total_passed = factor_tester.tests_passed + feature_tester.tests_passed
+    
+    print(f"\nTotal Tests: {total_tests}")
+    print(f"Total Passed: {total_passed}")
+    print(f"Overall Success Rate: {(total_passed/total_tests*100):.1f}%")
+    
+    return 0 if (factor_success and feature_success) else 1
 
 if __name__ == "__main__":
     sys.exit(main())
