@@ -1399,6 +1399,12 @@ def main():
     print("🔥 Starting Comprehensive Backend API Testing")
     print("=" * 80)
     
+    # Test PHASE 13.4 Factor Ranker (NEW)
+    ranker_tester = FactorRankerTester()
+    ranker_success = ranker_tester.run_all_tests()
+    
+    print("\n" + "=" * 80)
+    
     # Test PHASE 13.3 Factor Generator
     factor_tester = FactorGeneratorTester()
     factor_success = factor_tester.run_all_tests()
@@ -1413,17 +1419,18 @@ def main():
     print("\n" + "=" * 80)
     print("🏁 OVERALL TEST SUMMARY")
     print("=" * 80)
+    print(f"Factor Ranker Tests: {'✅ PASS' if ranker_success else '❌ FAIL'}")
     print(f"Factor Generator Tests: {'✅ PASS' if factor_success else '❌ FAIL'}")
     print(f"Feature Library Tests: {'✅ PASS' if feature_success else '❌ FAIL'}")
     
-    total_tests = factor_tester.tests_run + feature_tester.tests_run
-    total_passed = factor_tester.tests_passed + feature_tester.tests_passed
+    total_tests = ranker_tester.tests_run + factor_tester.tests_run + feature_tester.tests_run
+    total_passed = ranker_tester.tests_passed + factor_tester.tests_passed + feature_tester.tests_passed
     
     print(f"\nTotal Tests: {total_tests}")
     print(f"Total Passed: {total_passed}")
     print(f"Overall Success Rate: {(total_passed/total_tests*100):.1f}%")
     
-    return 0 if (factor_success and feature_success) else 1
+    return 0 if (ranker_success and factor_success and feature_success) else 1
 
 if __name__ == "__main__":
     sys.exit(main())
