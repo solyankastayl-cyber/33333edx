@@ -221,7 +221,7 @@ class FactorCombinator:
             expected_direction=infer_direction(inputs, categories),
             complexity=2,
             description=f"Difference factor: {inputs[0]} - {inputs[1]}",
-            tags=list(set(feature1.get("tags", []) + feature2.get("tags", []))) + ["difference"],
+            tags=self._flatten_tags(feature1, feature2) + ["difference"],
             created_at=datetime.now(timezone.utc),
             status=FactorStatus.CANDIDATE
         )
