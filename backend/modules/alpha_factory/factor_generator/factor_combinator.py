@@ -104,7 +104,7 @@ class FactorCombinator:
             expected_direction=infer_direction(inputs, categories),
             complexity=1,
             description=f"Single feature factor: {inputs[0]}",
-            tags=feature.get("tags", []) + ["single"],
+            tags=self._flatten_tags(feature) + ["single"],
             created_at=datetime.now(timezone.utc),
             status=FactorStatus.CANDIDATE
         )
