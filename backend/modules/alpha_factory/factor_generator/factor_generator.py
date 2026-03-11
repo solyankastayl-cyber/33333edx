@@ -327,7 +327,7 @@ class FactorGenerator:
                 break
             
             # Pick relevant regimes
-            feature_tags = set(f.get("tags", []) for f in [feature])
+            feature_tags = feature.get("tags", [])
             
             for regime in ["TRENDING_UP", "TRENDING_DOWN", "HIGH_VOL", "LOW_VOL", "RANGE"]:
                 if count >= max_count:
