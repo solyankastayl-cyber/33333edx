@@ -916,6 +916,158 @@ class FactorRankerTester:
         return self.tests_passed == self.tests_run
 
 
+class FactorGeneratorTester:
+    """PHASE 13.3 Factor Generator API Tests"""
+    
+    def __init__(self, base_url: str = "https://pattern-detector-10.preview.emergentagent.com"):
+        self.base_url = base_url.rstrip('/')
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.failed_tests = []
+        self.session = requests.Session()
+        self.session.headers.update({
+            'Content-Type': 'application/json',
+            'User-Agent': 'FactorGenerator-Tester/1.0'
+        })
+
+    def log_test(self, name: str, success: bool, details: str = ""):
+        """Log test result."""
+        self.tests_run += 1
+        status = "✅ PASS" if success else "❌ FAIL"
+        print(f"{status} | {name}")
+        if details:
+            print(f"     {details}")
+        
+        if success:
+            self.tests_passed += 1
+        else:
+            self.failed_tests.append({"test": name, "details": details})
+
+    def make_request(self, method: str, endpoint: str, data: Dict = None, expected_status: int = 200) -> tuple:
+        """Make HTTP request and return (success, response_data, status_code)."""
+        url = f"{self.base_url}/api/{endpoint.lstrip('/')}"
+        
+        try:
+            if method.upper() == 'GET':
+                response = self.session.get(url, timeout=30)
+            elif method.upper() == 'POST':
+                response = self.session.post(url, json=data, timeout=30)
+            elif method.upper() == 'PUT':
+                response = self.session.put(url, json=data, timeout=30)
+            else:
+                return False, {}, 0
+            
+            success = response.status_code == expected_status
+            
+            try:
+                response_data = response.json()
+            except:
+                response_data = {"raw_response": response.text}
+            
+            return success, response_data, response.status_code
+            
+        except Exception as e:
+            return False, {"error": str(e)}, 0
+
+    def test_factor_generator_health(self):
+        """Test GET /api/factor-generator/health - status=healthy"""
+        print("\n🔍 Testing Factor Generator Health Check...")
+        
+        success, data, status = self.make_request('GET', 'factor-generator/health')
+        
+        if success and data.get('status') == 'healthy':
+            self.log_test("Factor Generator Health Check", True, f"Status: {data.get('status')}")
+            return True
+        else:
+            self.log_test("Factor Generator Health Check", False, f"Status: {status}, Data: {data}")
+            return False
+
+    def test_factor_generator_stats(self):
+        """Test GET /api/factor-generator/stats - total_factors >= 1000"""
+        print("\n🔍 Testing Factor Generator Stats...")
+        
+        success, data, status = self.make_request('GET', 'factor-generator/stats')
+        
+        if success:
+            generator_stats = data.get('generator', {})
+            repository_stats = data.get('repository', {})
+            
+            total_factors = repository_stats.get('total_factors', 0)
+            
+            if total_factors >= 1000:
+                self.log_test("Stats - Total Factors >= 1000", True, f"Found {total_factors} factors")
+            else:
+                self.log_test("Stats - Total Factors >= 1000", False, f"Only {total_factors} factors found")
+            
+            # Check family breakdown
+            family_counts = repository_stats.get('family_counts', {})
+            self.log_test("Stats - Family Breakdown", len(family_counts) > 0, f"Families: {list(family_counts.keys())}")
+            
+            # Check template breakdown
+            template_counts = repository_stats.get('template_counts', {})
+            self.log_test("Stats - Template Breakdown", len(template_counts) > 0, f"Templates: {list(template_counts.keys())}")
+            
+            return total_factors >= 1000
+        else:
+            self.log_test("Factor Generator Stats", False, f"Status: {status}, Data: {data}")
+            return False
+
+    def test_phase_integration(self):
+        """Test integration with previous phases"""
+        print("\n🔍 Testing Phase Integration...")
+        
+        # Test PHASE 13.1 Node Registry
+        success1, data1, status1 = self.make_request('GET', 'alpha-factory/stats')
+        if success1:
+            registry_stats = data1.get('registry', {})
+            total_nodes = registry_stats.get('total_nodes', 0)
+            self.log_test("PHASE 13.1 Node Registry", total_nodes > 0, f"Found {total_nodes} nodes")
+        else:
+            self.log_test("PHASE 13.1 Node Registry", False, f"Status: {status1}")
+        
+        # Test PHASE 13.2 Feature Library
+        success2, data2, status2 = self.make_request('GET', 'alpha-features/stats')
+        if success2:
+            registry_stats = data2.get('registry', {})
+            total_features = registry_stats.get('total_features', 0)
+            self.log_test("PHASE 13.2 Feature Library", total_features > 0, f"Found {total_features} features")
+        else:
+            self.log_test("PHASE 13.2 Feature Library", False, f"Status: {status2}")
+        
+        return success1 and success2
+
+    def run_all_tests(self):
+        """Run all Factor Generator test cases."""
+        print("=" * 80)
+        print("🚀 PHASE 13.3 Factor Generator - Backend API Tests")
+        print("=" * 80)
+        
+        # Core health and stats tests
+        self.test_factor_generator_health()
+        self.test_factor_generator_stats()
+        
+        # Integration tests
+        self.test_phase_integration()
+        
+        # Print summary
+        print("\n" + "=" * 80)
+        print("📊 FACTOR GENERATOR TEST SUMMARY")
+        print("=" * 80)
+        print(f"Tests Run: {self.tests_run}")
+        print(f"Tests Passed: {self.tests_passed}")
+        print(f"Tests Failed: {len(self.failed_tests)}")
+        print(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            print("\n❌ FAILED TESTS:")
+            for i, failure in enumerate(self.failed_tests, 1):
+                print(f"{i}. {failure['test']}")
+                if failure['details']:
+                    print(f"   {failure['details']}")
+        
+        return self.tests_passed == self.tests_run
+
+
 class AlphaFeatureLibraryTester:
     def __init__(self, base_url: str = "https://pattern-detector-10.preview.emergentagent.com"):
         self.base_url = base_url.rstrip('/')
