@@ -14,7 +14,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://trade-optimizer-24.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://market-reasoner.preview.emergentagent.com').rstrip('/')
 
 
 class TestV2VolScaleFeature:
