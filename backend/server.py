@@ -72,8 +72,8 @@ async def health():
     return {
         "ok": True,
         "mode": "TA_ENGINE_ALPHA_FACTORY",
-        "version": "13.5.0",
-        "phase": "PHASE 13.5 - Alpha Graph",
+        "version": "13.6.0",
+        "phase": "PHASE 13.6 - Alpha DAG",
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
