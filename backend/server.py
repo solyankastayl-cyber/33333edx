@@ -72,8 +72,8 @@ async def health():
     return {
         "ok": True,
         "mode": "TA_ENGINE_ALPHA_FACTORY",
-        "version": "13.7.0",
-        "phase": "PHASE 13.7 - Alpha Deployment",
+        "version": "13.8.0",
+        "phase": "PHASE 13.8 - Exchange Intelligence",
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
@@ -150,6 +150,14 @@ try:
     print("[Routes] PHASE 13.7 Alpha Deployment router registered")
 except ImportError as e:
     print(f"[Routes] Alpha Deployment router not available: {e}")
+
+# PHASE 13.8 Exchange Intelligence Router
+try:
+    from modules.exchange_intelligence.exchange_intel_routes import router as exchange_intel_router
+    app.include_router(exchange_intel_router)
+    print("[Routes] PHASE 13.8 Exchange Intelligence router registered")
+except ImportError as e:
+    print(f"[Routes] Exchange Intelligence router not available: {e}")
 
 
 # ============================================
@@ -250,8 +258,8 @@ async def root():
     """Root endpoint"""
     return {
         "name": "TA Engine",
-        "version": "13.7.0",
-        "phase": "PHASE 13.7 - Alpha Deployment",
+        "version": "13.8.0",
+        "phase": "PHASE 13.8 - Exchange Intelligence",
         "status": "running",
         "endpoints": {
             "health": "/api/health",
@@ -263,6 +271,7 @@ async def root():
             "alpha_graph": "/api/alpha-graph/*",
             "alpha_dag": "/api/alpha-dag/*",
             "alpha_deployment": "/api/alpha-deployment/*",
+            "exchange_intelligence": "/api/exchange-intelligence/*",
             "ta_registry": "/api/ta/registry",
             "ta_patterns": "/api/ta/patterns",
             "ta_analyze": "/api/ta/analyze"
