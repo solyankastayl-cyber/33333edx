@@ -71,27 +71,22 @@ Autonomous Quant Trading System with Alpha Production Machine
 - `alpha_deployment_history` - Decision history
 - `alpha_deployment_snapshots` - State snapshots
 
-## Exchange Audit Completed ✅
+## Exchange Audit Completed
 - Full comparative analysis: current project vs FOMO-SEOFv1.69
 - Report: `/app/EXCHANGE_AUDIT_REPORT.md`
-- Key findings:
-  - Exchange core is ~90% identical between both projects
-  - FOMO has additional MLOps modules: reliability (URI), drift detection, simulation, capital metrics
-  - Current project has deeper analytics: MetaBrain, TA Engine, Edge/Fractal, Strategy Builder
-  - Both diverged from common codebase in different directions
+- Extraction Matrix: `/app/EXTRACTION_MATRIX.md`
+
+### PHASE 13.8 - Exchange Intelligence Module DONE
+- 5 engines: FundingOI, DerivativesPressure, Liquidation, ExchangeFlow, Volume
+- ExchangeContext aggregator with composite bias scoring
+- 8 API endpoints tested (40/40 tests passed)
+- Derives proxy signals from candle data, ready for live exchange data
 
 ## Next Phases
-- PHASE 14 - Meta Portfolio Layer (Strategy Rotation, Decay Detector, Portfolio Optimizer)
-- PHASE 15 - Risk Intelligence (tail risk, liquidity shocks)
-- Meta-Alpha Layer (dynamic alpha factor weighting)
-- Market Regime Engine v2 (multi-level regime detection)
-- Alpha Ecology Layer (crowding/interference monitoring)
-
-## Integration Candidates from FOMO (prioritized)
-- P0: Reliability Index (URI), Drift Detection
-- P1: Simulation Engine, Capital Guard
-- P2: Prediction API, Chart services, Universe Loader
-- P3: Exchange Health, Admin snapshots
+- PHASE 13.8.1 - Production Safeguards (URI + Drift Detection from FOMO)
+- PHASE 13.9 - Trading Decision Layer (TA + Exchange context -> decisions)
+- PHASE 14 - Meta Portfolio Layer
+- PHASE 15 - Risk Intelligence
 
 ## Date Updated
 2026-02-27
