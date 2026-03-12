@@ -83,3 +83,7 @@ FOMO-SEOFv1.69/.git/objects/pack/pack-dfaffa3c2c2f6a313dbcc6720d4fed4d3eaba4cd.p
 # Environment files
 *.env
 *.env.*
+-e 
+# Environment files
+*.env
+*.env.*
